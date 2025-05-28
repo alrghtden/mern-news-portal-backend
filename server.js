@@ -27,7 +27,7 @@ app.use(
   createRouteHandler({
     router: uploadRouter,
     config: {
-      Secret: process.env.UPLOADTHING_SECRET
+      secret: process.env.UPLOADTHING_SECRET
     },
   })
 );
