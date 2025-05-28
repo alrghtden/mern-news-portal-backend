@@ -27,7 +27,7 @@ app.use(
   createRouteHandler({
     router: uploadRouter,
     config: {
-      uploadthingSecret: process.env.UPLOADTHING_SERVER
+      Secret: process.env.UPLOADTHING_TOKEN
     },
   })
 );
