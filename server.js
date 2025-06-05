@@ -9,9 +9,6 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const komentarRoutes = require('./routes/komentarRoutes');
 
-const { createRouteHandler } = require('uploadthing/express');
-const { uploadRouter } = require('./uploadthing');
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -19,18 +16,8 @@ app.use(cors({
   origin: 'https://mern-news-portal-u5qs.vercel.app',
   credentials: true
 }));
-
 app.use(express.json());
-
-app.use(
-  '/api/uploadthing',
-  createRouteHandler({
-    router: uploadRouter,
-    config: {
-      secret: process.env.UPLOADTHING_SECRET
-    },
-  })
-);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/berita', beritaRoutes);
 app.use('/api/auth', authRoutes);
@@ -38,9 +25,9 @@ app.use('/api/user', userRoutes);
 app.use('/api/komentar', komentarRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
+.then(() => {
+  app.listen(PORT, () => {
+    console.log('Server running on port ${PORT}');
+  });
+})
+.catch(err => console.error('MongoDB connection error:', err));
