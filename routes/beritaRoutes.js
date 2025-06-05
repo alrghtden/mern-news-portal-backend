@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const beritaController = require('../controllers/beritaController');
-const upload = require('../middleware/uploadBerita'); // pakai middleware Cloudinary
+const upload = require('../middlewares/uploadBerita'); // pakai middleware Cloudinary
 
 router.get('/', beritaController.getAllBerita);
 router.get('/:id', beritaController.getBeritaById);

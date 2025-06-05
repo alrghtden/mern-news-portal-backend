@@ -7,7 +7,6 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'berita',
     allowed_formats: ['jpg', 'jpeg', 'png'],
-    public_id: (req, file) => Date.now() + '-' + file.originalname
   },
 });
 
