@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const fs = require('fs');
+const path = require('path');
 const bcrypt = require('bcrypt');
 
 exports.getAllUsers = async (req, res) => {
@@ -22,21 +24,16 @@ exports.getUserById = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { nama, email, password, role, foto } = req.body;
+    const { nama, email, password, role } = req.body;
+    const foto = req.file ? req.file.filename : 'default_profpic.png';
 
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'Email sudah digunakan' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
-      nama,
-      email,
-      password: hashedPassword,
-      role,
-      foto: foto || 'https://via.placeholder.com/150' // default foto jika kosong
-    });
-
+    const newUser = new User({ nama, email, password: hashedPassword, role, foto });
     await newUser.save();
+
     res.status(201).json({ message: 'User berhasil ditambahkan', user: newUser });
   } catch (err) {
     res.status(500).json({ message: 'Gagal menambahkan user' });
@@ -48,13 +45,23 @@ exports.updateUser = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: 'User tidak ditemukan' });
 
-    const { nama, email, password, role, foto } = req.body;
+    const { nama, email, password, role } = req.body;
 
     user.nama = nama;
     user.email = email;
     user.role = role;
-    if (foto) user.foto = foto;
-    if (password) user.password = await bcrypt.hash(password, 10);
+
+    if (password) {
+      user.password = await bcrypt.hash(password, 10);
+    }
+
+    if (req.file) {
+      if (user.foto) {
+        const oldPath = path.join(__dirname, '../uploads', user.foto);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      user.foto = req.file.filename;
+    }
 
     await user.save();
     res.json({ message: 'User berhasil diperbarui', user });

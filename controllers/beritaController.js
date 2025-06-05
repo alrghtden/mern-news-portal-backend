@@ -1,4 +1,6 @@
 const Berita = require('../models/Berita');
+const fs = require('fs');
+const path = require('path');
 
 exports.getAllBerita = async (req, res) => {
   try {
@@ -20,10 +22,11 @@ exports.getBeritaById = async (req, res) => {
 };
 
 exports.createBerita = async (req, res) => {
-  const { judul, isi, kategori, gambar } = req.body;
+  const { judul, isi, kategori } = req.body;
+  const gambar = req.file ? req.file.filename : null;
 
   try {
-    const newBerita = new Berita({ judul, isi, kategori, gambar });
+    const newBerita = new Berita({ judul, isi, gambar, kategori });
     await newBerita.save();
     res.status(201).json(newBerita);
   } catch (err) {
@@ -36,12 +39,18 @@ exports.updateBerita = async (req, res) => {
     const berita = await Berita.findById(req.params.id);
     if (!berita) return res.status(404).json({ error: 'Berita tidak ditemukan' });
 
-    const { judul, isi, kategori, gambar } = req.body;
-
+    const { judul, isi, kategori } = req.body;
     berita.judul = judul;
     berita.isi = isi;
     berita.kategori = kategori;
-    berita.gambar = gambar;
+
+    if (req.file) {
+      if (berita.gambar) {
+        const oldPath = path.join(__dirname, '../uploads', berita.gambar);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      berita.gambar = req.file.filename;
+    }
 
     await berita.save();
     res.json(berita);
@@ -53,7 +62,11 @@ exports.updateBerita = async (req, res) => {
 
 exports.deleteBerita = async (req, res) => {
   try {
-    await Berita.findByIdAndDelete(req.params.id);
+    const berita = await Berita.findByIdAndDelete(req.params.id);
+    if (berita.gambar) {
+      const filePath = path.join(__dirname, '../uploads', berita.gambar);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
     res.json({ message: 'Berita berhasil dihapus' });
   } catch (err) {
     res.status(400).json({ error: 'Gagal menghapus berita' });
