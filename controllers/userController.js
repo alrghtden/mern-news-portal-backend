@@ -1,7 +1,6 @@
 const User = require('../models/User');
-const fs = require('fs');
-const path = require('path');
 const bcrypt = require('bcrypt');
+const cloudinary = require('../config/cloudinary');
 
 exports.getAllUsers = async (req, res) => {
   try {
@@ -25,17 +24,37 @@ exports.getUserById = async (req, res) => {
 exports.createUser = async (req, res) => {
   try {
     const { nama, email, password, role } = req.body;
-    const foto = req.file ? req.file.filename : 'default_profpic.png';
 
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'Email sudah digunakan' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ nama, email, password: hashedPassword, role, foto });
-    await newUser.save();
 
+    let foto = null;
+    let fotoPublicId = null;
+
+    if (req.file) {
+      foto = req.file.path;
+      fotoPublicId = req.file.filename;
+    } else {
+      // Jika tidak ada gambar, gunakan default dari Cloudinary (optional)
+      foto = 'https://res.cloudinary.com/demo/image/upload/v1234567890/default_profpic.png';
+      fotoPublicId = null;
+    }
+
+    const newUser = new User({
+      nama,
+      email,
+      password: hashedPassword,
+      role,
+      foto,
+      fotoPublicId,
+    });
+
+    await newUser.save();
     res.status(201).json({ message: 'User berhasil ditambahkan', user: newUser });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Gagal menambahkan user' });
   }
 };
@@ -56,16 +75,18 @@ exports.updateUser = async (req, res) => {
     }
 
     if (req.file) {
-      if (user.foto) {
-        const oldPath = path.join(__dirname, '../uploads', user.foto);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      if (user.fotoPublicId) {
+        await cloudinary.uploader.destroy(user.fotoPublicId);
       }
-      user.foto = req.file.filename;
+
+      user.foto = req.file.path;
+      user.fotoPublicId = req.file.filename;
     }
 
     await user.save();
     res.json({ message: 'User berhasil diperbarui', user });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Gagal memperbarui user' });
   }
 };
@@ -75,8 +96,13 @@ exports.deleteUser = async (req, res) => {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) return res.status(404).json({ error: 'User tidak ditemukan' });
 
+    if (user.fotoPublicId) {
+      await cloudinary.uploader.destroy(user.fotoPublicId);
+    }
+
     res.json({ message: 'User berhasil dihapus' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Gagal menghapus user' });
   }
 };

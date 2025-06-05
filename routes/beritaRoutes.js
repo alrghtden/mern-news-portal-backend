@@ -1,15 +1,7 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
 const router = express.Router();
 const beritaController = require('../controllers/beritaController');
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
-
-const upload = multer({ storage });
+const upload = require('../middleware/uploadBerita'); // pakai middleware Cloudinary
 
 router.get('/', beritaController.getAllBerita);
 router.get('/:id', beritaController.getBeritaById);
