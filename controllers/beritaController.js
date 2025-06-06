@@ -43,6 +43,8 @@ exports.createBerita = async (req, res) => {
     await newBerita.save();
     res.status(201).json(newBerita);
   } catch (err) {
+    console.error('Gagal membuat berita:', err.message);
+    console.error(err.stack); // Tampilkan stacktrace error
     console.error(err);
     res.status(400).json({ error: 'Gagal membuat berita' });
   }
