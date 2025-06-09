@@ -28,8 +28,12 @@ exports.createBerita = async (req, res) => {
     let gambarPublicId = null;
 
     if (req.file) {
-      gambar = req.file.path; // URL dari Cloudinary
-      gambarPublicId = req.file.filename; // Ini adalah public_id yang dapat dipakai untuk delete
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'berita'
+      });
+
+      gambar = uploadResult.secure_url;
+      gambarPublicId = uploadResult.public_id;
     }
 
     const newBerita = new Berita({
@@ -61,13 +65,16 @@ exports.updateBerita = async (req, res) => {
     berita.kategori = kategori;
 
     if (req.file) {
-      // Hapus gambar lama dari Cloudinary jika ada
       if (berita.gambarPublicId) {
         await cloudinary.uploader.destroy(berita.gambarPublicId);
       }
 
-      berita.gambar = req.file.path;
-      berita.gambarPublicId = req.file.filename;
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'berita',
+      });
+
+      berita.gambar = uploadResult.secure_url;
+      berita.gambarPublicId = uploadResult.public_id;
     }
 
     await berita.save();

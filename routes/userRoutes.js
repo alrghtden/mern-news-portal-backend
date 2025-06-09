@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const upload = require('../middlewares/uploadUser'); // pakai middleware Cloudinary
+const upload = require('../middlewares/uploadUser');
 
 router.get('/', userController.getAllUsers);
 router.get('/:id', userController.getUserById);

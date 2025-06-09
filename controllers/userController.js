@@ -37,7 +37,6 @@ exports.createUser = async (req, res) => {
       foto = req.file.path;
       fotoPublicId = req.file.filename;
     } else {
-      // Jika tidak ada gambar, gunakan default dari Cloudinary (optional)
       foto = 'https://res.cloudinary.com/demo/image/upload/v1234567890/default_profpic.png';
       fotoPublicId = null;
     }
